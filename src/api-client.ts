@@ -15,6 +15,27 @@ interface Document {
   last_viewed_panel?: {
     content?: any;
   };
+
+  // Enriched from Granola cache file (~/Library/Application Support/Granola/cache-v3.json)
+  // This data is not available from the API but is added by the MCP server
+  meeting_metadata?: {
+    attendees?: Array<{
+      email?: string;
+      name?: string;
+      organizer?: boolean;
+      responseStatus?: string;
+    }>;
+    conference?: {
+      platform?: string;
+      url?: string;
+    };
+    calendarId?: string;
+  };
+}
+
+// Extended document type with guaranteed meeting metadata (used in MCP server)
+export interface EnrichedDocument extends Document {
+  meeting_metadata: NonNullable<Document['meeting_metadata']>;
 }
 
 interface Workspace {

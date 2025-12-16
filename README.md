@@ -587,3 +587,144 @@ output_directory/
 - **Documents**: Individual notes/meetings with transcripts and AI-generated summaries
 - A document belongs to one workspace but can be in multiple folders
 - Documents can exist without being in any folder
+
+---
+
+## MCP Server Setup
+
+The Granola MCP server enables **Claude Code** and **Claude Desktop** to search your meeting notes using natural language queries.
+
+### What is MCP?
+
+The [Model Context Protocol (MCP)](https://modelcontextprotocol.io) lets Claude access your local data through custom servers. The Granola MCP server provides Claude with search capabilities over your synced meeting documents.
+
+### Prerequisites
+
+1. **Sync your documents first:**
+   ```bash
+   bun run main /path/to/output
+   ```
+   This creates the indexed document structure that the MCP server reads.
+
+2. **Install MCP dependencies** (already included if you cloned recently):
+   ```bash
+   bun install
+   ```
+
+### Configuration
+
+The MCP server reads from a pre-synced directory and optionally enriches documents with attendee data from Granola's local cache.
+
+**Environment Variables:**
+- `GRANOLA_SYNC_DIR` (required) - Path to your synced documents directory (from `bun run main`)
+- `GRANOLA_CACHE_PATH` (optional) - Override Granola cache location (default: `~/Library/Application Support/Granola/cache-v3.json`)
+
+### For Claude Code
+
+Add to your Claude Code MCP configuration file (location varies by OS):
+
+```json
+{
+  "mcpServers": {
+    "granola": {
+      "command": "bun",
+      "args": ["run", "/absolute/path/to/reverse-engineering-granola-api/src/mcp-server.ts"],
+      "env": {
+        "GRANOLA_SYNC_DIR": "/absolute/path/to/output"
+      }
+    }
+  }
+}
+```
+
+**Note:** Use absolute paths, not relative paths like `~` or `./`
+
+### For Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
+```json
+{
+  "mcpServers": {
+    "granola": {
+      "command": "bun",
+      "args": ["run", "/Users/yourname/code/reverse-engineering-granola-api/src/mcp-server.ts"],
+      "env": {
+        "GRANOLA_SYNC_DIR": "/Users/yourname/output"
+      }
+    }
+  }
+}
+```
+
+After adding the configuration, restart Claude Desktop.
+
+### Available MCP Tools
+
+Once configured, you can ask Claude natural language queries:
+
+**1. search_meetings** - Search meetings with filters:
+- By attendee: `"Show me my last 5 meetings with joe@example.com"`
+- By date: `"Find all meetings from last week"`
+- By content: `"Meetings about product launch"`
+- Combined: `"Meetings with Sarah from last month about pricing"`
+
+**2. get_meeting_details** - Get full meeting information including notes
+
+**3. get_meeting_transcript** - Get formatted transcript
+
+**4. refresh_cache** - Reload attendee data without restarting
+
+### Example Queries
+
+Once the MCP server is configured, you can ask Claude:
+
+```
+"Show me my last 5 meetings with joe@example.com"
+"Find all meetings from last week about product launch"
+"Get the transcript from my meeting yesterday with Sarah"
+"Who did I meet with most often this month?"
+"Show me meetings in the Sales folder"
+```
+
+Claude will call the appropriate MCP tools and format the results for you.
+
+### How It Works
+
+**Architecture:**
+1. Pre-synced documents provide content, transcripts, and basic metadata
+2. Granola's local cache file (`cache-v3.json`) provides attendee emails and names
+3. In-memory indexes enable fast multi-dimensional queries
+4. Natural language dates are parsed server-side ("last week" → date range)
+
+**Data Privacy:**
+- All data stays local on your machine
+- No API calls or network requests during queries
+- Works offline once documents are synced
+
+### Troubleshooting
+
+**"Failed to initialize cache"**
+- Run `bun run main /path/to/output` first to sync documents
+- Verify `GRANOLA_SYNC_DIR` points to the correct directory
+
+**"No attendee information"**
+- Check that `~/Library/Application Support/Granola/cache-v3.json` exists
+- The MCP server will still work without attendees (searches titles/dates/content)
+
+**MCP server not appearing in Claude**
+- Verify you're using absolute paths in the configuration
+- Check Claude Desktop/Code logs for errors
+- Restart Claude after modifying configuration
+
+### Manual Testing
+
+Test the MCP server directly:
+
+```bash
+# Run the server (it uses stdio for MCP protocol)
+bun run mcp-server
+
+# In another terminal, you can test with MCP inspector:
+npx @modelcontextprotocol/inspector bun run src/mcp-server.ts
+```
