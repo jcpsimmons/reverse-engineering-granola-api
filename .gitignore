@@ -1,4 +1,4 @@
-# Python
+# Python (legacy - being removed)
 __pycache__/
 *.py[cod]
 *$py.class
@@ -8,8 +8,14 @@ venv/
 env/
 ENV/
 *.egg-info/
+
+# Node/Bun
+node_modules/
 dist/
 build/
+*.tsbuildinfo
+.bun/
+bun.lockb
 
 # IDEs
 .vscode/
@@ -22,3 +28,9 @@ config.json
 
 # Logs
 *.log
+
+# Output
+output/
+granola_api_response.json
+workspaces.json
+document_lists.json

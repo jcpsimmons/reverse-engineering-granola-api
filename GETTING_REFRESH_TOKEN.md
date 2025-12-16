@@ -2,7 +2,25 @@
 
 Guide for extracting refresh tokens and `client_id` from Granola on macOS for API reverse engineering.
 
-## Quick Start (Recommended Method)
+## Automatic Extraction (Recommended for TypeScript/Bun)
+
+**The TypeScript version now includes automatic token extraction!** Simply run any script without a `config.json` file, and it will:
+
+1. Launch Granola automatically (if not already running)
+2. Extract the refresh token and client ID from Granola's data files
+3. Create `config.json` with the extracted tokens
+4. Close Granola (if it wasn't already running)
+
+Example:
+```bash
+bun run src/main.ts /path/to/output
+```
+
+The script will handle everything automatically. No manual token extraction needed!
+
+**Note:** Automatic extraction only works on macOS where Granola stores its data in `~/Library/Application Support/Granola/`.
+
+## Manual Extraction (Optional)
 
 ### Step 1: Login to Granola
 
@@ -74,6 +92,8 @@ The `client_id` is: `client_<REDACTED>`
 
 ### Step 4: Configure Your Script
 
+If you want to manually create the config file instead of using automatic extraction:
+
 Create `config.json`:
 
 ```json
@@ -95,14 +115,14 @@ Create `config.json`:
 **Run your sync script regularly:**
 
 ```bash
-# Run once
-python3 main.py /path/to/output
+# Run once with Bun
+bun run src/main.ts /path/to/output
 
 # Or schedule with cron (every 5 minutes)
-*/5 * * * * cd /path/to/repo && python3 main.py /path/to/output
+*/5 * * * * cd /path/to/repo && bun run src/main.ts /path/to/output
 ```
 
-The `token_manager.py` automatically:
+The TypeScript token manager automatically:
 - Rotates the refresh token on each use
 - Saves the new refresh token back to `config.json`
 - Keeps your session alive indefinitely
@@ -176,7 +196,7 @@ cp config.json.template config.json
 **Test token validity:**
 
 ```bash
-python3 main.py /path/to/output
+bun run src/list-workspaces.ts
 ```
 
 **Expected output:**
@@ -192,23 +212,26 @@ Successfully obtained access token (expires in 3600 seconds)
 **Token already exchanged:**
 
 - The refresh token was already used and is now invalid
-- Extract a fresh refresh token from `supabase.json` (requires logging into Granola again)
+- With automatic extraction: Just delete `config.json` and run the script again
+- With manual extraction: Extract a fresh refresh token from `supabase.json` (requires logging into Granola again)
 - Update `config.json` with the new token
 
 **Invalid grant:**
 
 - Token expired or revoked
-- Re-authenticate to Granola and extract new token from `supabase.json`
+- With automatic extraction: Delete `config.json` and run the script again
+- With manual extraction: Re-authenticate to Granola and extract new token from `supabase.json`
 - Follow Step 3 to preserve your session
 
 **Missing client_id:**
 
 - Verify `config.json` contains both `refresh_token` and `client_id`
+- With automatic extraction: This should not happen, but you can delete `config.json` and try again
 - Extract `client_id` from the JWT token in `supabase.json` as shown above
 
 **Session keeps expiring:**
 
 - Make sure you're refreshing the token every ~5 minutes
-- Verify you removed the `~/Library/Application Support/Granola/` directory after extraction
-- Check that `token_manager.py` is saving the new refresh token to `config.json`
+- Verify you removed the `~/Library/Application Support/Granola/` directory after extraction (manual method only)
+- Check that the token manager is saving the new refresh token to `config.json`
 
