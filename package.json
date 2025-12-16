@@ -1,8 +1,9 @@
 {
   "name": "reverse-engineering-granola-api",
   "version": "1.0.0",
-  "description": "Reverse-engineered documentation of the Granola API",
+  "description": "Reverse-engineered documentation of the Granola API with MCP server for searching meeting notes",
   "type": "module",
+  "mcpName": "granola-search",
   "scripts": {
     "main": "bun run src/main.ts",
     "list-workspaces": "bun run src/list-workspaces.ts",
@@ -15,10 +16,19 @@
   "keywords": [
     "granola",
     "api",
-    "reverse-engineering"
+    "reverse-engineering",
+    "mcp",
+    "mcp-server",
+    "meetings",
+    "notes",
+    "search"
   ],
-  "author": "",
+  "author": "jcpsimmons",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jcpsimmons/reverse-engineering-granola-api.git"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.1",
     "zod": "^4.2.1"

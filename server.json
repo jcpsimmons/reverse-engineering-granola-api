@@ -1,0 +1,119 @@
+{
+  "name": "granola-search",
+  "version": "1.0.0",
+  "description": "Search and query your Granola meeting notes with natural language. Filter by attendees, dates, content, and workspaces.",
+  "author": {
+    "name": "jcpsimmons",
+    "url": "https://github.com/jcpsimmons"
+  },
+  "homepage": "https://github.com/jcpsimmons/reverse-engineering-granola-api",
+  "license": "MIT",
+  "runtime": "bun",
+  "server": {
+    "type": "package",
+    "entry_point": "src/mcp-server.ts",
+    "args": [],
+    "env": {
+      "GRANOLA_SYNC_DIR": {
+        "description": "Path to synced Granola documents directory (required)",
+        "required": true
+      },
+      "GRANOLA_CACHE_PATH": {
+        "description": "Override Granola cache file location (optional)",
+        "required": false,
+        "default": "~/Library/Application Support/Granola/cache-v3.json"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "search_meetings",
+      "description": "Search Granola meetings with natural language queries. Supports filtering by attendees (email), date ranges (with relative dates like 'last week'), workspaces, folders, and content search in titles and transcripts.",
+      "parameters": {
+        "attendee_email": {
+          "type": "string",
+          "description": "Filter by attendee email (partial match supported)",
+          "required": false
+        },
+        "start_date": {
+          "type": "string",
+          "description": "Start date - supports ISO8601 or relative dates (e.g., 'last week', 'yesterday')",
+          "required": false
+        },
+        "end_date": {
+          "type": "string",
+          "description": "End date - supports ISO8601 or relative dates",
+          "required": false
+        },
+        "workspace_id": {
+          "type": "string",
+          "description": "Filter by workspace/organization ID",
+          "required": false
+        },
+        "folder_name": {
+          "type": "string",
+          "description": "Filter by folder name (partial match supported)",
+          "required": false
+        },
+        "content_query": {
+          "type": "string",
+          "description": "Search in meeting titles and transcripts",
+          "required": false
+        },
+        "limit": {
+          "type": "number",
+          "description": "Maximum number of results (default: 10)",
+          "required": false,
+          "default": 10
+        },
+        "include_transcript": {
+          "type": "boolean",
+          "description": "Include full transcript in results (default: false)",
+          "required": false,
+          "default": false
+        }
+      }
+    },
+    {
+      "name": "get_meeting_details",
+      "description": "Get full details for a specific meeting by document ID, including notes and metadata",
+      "parameters": {
+        "document_id": {
+          "type": "string",
+          "description": "The document ID of the meeting",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "get_meeting_transcript",
+      "description": "Get the formatted transcript for a specific meeting",
+      "parameters": {
+        "document_id": {
+          "type": "string",
+          "description": "The document ID of the meeting",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "refresh_cache",
+      "description": "Reload Granola cache file to pick up new meeting attendees without restarting the server",
+      "parameters": {}
+    }
+  ],
+  "keywords": [
+    "granola",
+    "meetings",
+    "notes",
+    "search",
+    "transcripts",
+    "calendar",
+    "productivity"
+  ],
+  "platforms": ["darwin"],
+  "prerequisites": [
+    "Granola app installed",
+    "Documents synced via 'bun run main' command"
+  ]
+}
