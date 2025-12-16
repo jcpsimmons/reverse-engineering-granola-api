@@ -2,10 +2,45 @@
 
 Reverse-engineered documentation of the Granola API, including authentication flow and endpoints.
 
+**Now written in TypeScript and runs with [Bun](https://bun.sh)!**
+
 ## Credits
 
 This work builds upon the initial reverse engineering research by Joseph Thacker:
 - [Reverse Engineering Granola Notes](https://josephthacker.com/hacking/2025/05/08/reverse-engineering-granola-notes.html)
+
+## Quick Start
+
+### Prerequisites
+
+- [Bun](https://bun.sh) runtime installed
+- macOS (for automatic token extraction)
+- Granola app installed
+
+### Installation
+
+No installation needed! Just run the scripts with Bun:
+
+```bash
+bun run src/main.ts /path/to/output/directory
+```
+
+The script will automatically:
+1. Launch Granola (if not running)
+2. Extract the necessary tokens from Granola's data files
+3. Close Granola
+4. Fetch your documents and save them
+
+### Manual Token Configuration (Optional)
+
+If you prefer to manually configure tokens or if automatic extraction fails:
+
+1. Copy the template:
+   ```bash
+   cp config.json.template config.json
+   ```
+
+2. Add your tokens to `config.json` (see `GETTING_REFRESH_TOKEN.md` for details)
 
 ## Token Management
 
@@ -36,13 +71,19 @@ Granola uses WorkOS for authentication with refresh token rotation.
 
 ## Implementation Files
 
-- `main.py` - Document fetching and conversion logic (includes workspace, folder, and batch fetching)
-- `token_manager.py` - OAuth token management and refresh
-- `list_workspaces.py` - List all available workspaces (organizations)
-- `list_folders.py` - List all document lists (folders)
-- `filter_by_workspace.py` - Filter and organize documents by workspace
-- `filter_by_folder.py` - Filter and organize documents by folder
-- `GETTING_REFRESH_TOKEN.md` - Method to extract tokens from Granola app
+All files are written in TypeScript and located in the `src/` directory:
+
+- `src/main.ts` - Document fetching and conversion logic (includes workspace, folder, and batch fetching)
+- `src/token-manager.ts` - OAuth token management and refresh
+- `src/granola-automation.ts` - Automatic Granola app control and token extraction (macOS only)
+- `src/api-client.ts` - Granola API client methods
+- `src/converters.ts` - ProseMirror to Markdown conversion utilities
+- `src/list-workspaces.ts` - List all available workspaces (organizations)
+- `src/list-folders.ts` - List all document lists (folders)
+- `src/filter-by-workspace.ts` - Filter and organize documents by workspace
+- `src/filter-by-folder.ts` - Filter and organize documents by folder
+
+Legacy Python files (`*.py`) have been removed in favor of TypeScript implementation.
 
 ## API Endpoints
 
@@ -384,24 +425,33 @@ Each document is saved with a `metadata.json` file containing:
 
 ### Fetch Documents and Workspaces
 
-The main script now automatically fetches workspace information along with documents:
+The main script automatically fetches workspace information along with documents:
 
 ```bash
-python3 main.py /path/to/output/directory
+bun run src/main.ts /path/to/output/directory
+```
+
+Or using the npm script shorthand:
+
+```bash
+bun run main /path/to/output/directory
 ```
 
 This will:
-1. Fetch all workspaces and save to `workspaces.json`
-2. Fetch all document lists (folders) and save to `document_lists.json`
-3. Fetch all documents with workspace and folder information
-4. Save each document with metadata including `workspace_id`, `workspace_name`, and `folders`
+1. Automatically extract tokens from Granola (if config.json doesn't exist)
+2. Fetch all workspaces and save to `workspaces.json`
+3. Fetch all document lists (folders) and save to `document_lists.json`
+4. Fetch all documents with workspace and folder information
+5. Save each document with metadata including `workspace_id`, `workspace_name`, and `folders`
 
 ### List All Workspaces
 
 View all available workspaces:
 
 ```bash
-python3 list_workspaces.py
+bun run src/list-workspaces.ts
+# or
+bun run list-workspaces
 ```
 
 Output:
@@ -423,7 +473,9 @@ Workspaces found:
 View all document lists (folders):
 
 ```bash
-python3 list_folders.py
+bun run src/list-folders.ts
+# or
+bun run list-folders
 ```
 
 Output:
@@ -450,25 +502,27 @@ Document Lists (Folders) found:
 **List all workspaces with document counts:**
 
 ```bash
-python3 filter_by_workspace.py /path/to/output --list-workspaces
+bun run src/filter-by-workspace.ts /path/to/output --list-workspaces
+# or
+bun run filter-by-workspace /path/to/output --list-workspaces
 ```
 
 **Filter by workspace ID:**
 
 ```bash
-python3 filter_by_workspace.py /path/to/output --workspace-id 924ba459-d11d-4da8-88c8-789979794744
+bun run src/filter-by-workspace.ts /path/to/output --workspace-id 924ba459-d11d-4da8-88c8-789979794744
 ```
 
 **Filter by workspace name:**
 
 ```bash
-python3 filter_by_workspace.py /path/to/output --workspace-name "Personal"
+bun run src/filter-by-workspace.ts /path/to/output --workspace-name "Personal"
 ```
 
 **View all documents grouped by workspace:**
 
 ```bash
-python3 filter_by_workspace.py /path/to/output
+bun run src/filter-by-workspace.ts /path/to/output
 ```
 
 ### Filter Documents by Folder
@@ -476,31 +530,33 @@ python3 filter_by_workspace.py /path/to/output
 **List all folders with document counts:**
 
 ```bash
-python3 filter_by_folder.py /path/to/output --list-folders
+bun run src/filter-by-folder.ts /path/to/output --list-folders
+# or
+bun run filter-by-folder /path/to/output --list-folders
 ```
 
 **Filter by folder ID:**
 
 ```bash
-python3 filter_by_folder.py /path/to/output --folder-id 9f3d3537-e001-401e-8ce6-b7af6f24a450
+bun run src/filter-by-folder.ts /path/to/output --folder-id 9f3d3537-e001-401e-8ce6-b7af6f24a450
 ```
 
 **Filter by folder name:**
 
 ```bash
-python3 filter_by_folder.py /path/to/output --folder-name "Sales"
+bun run src/filter-by-folder.ts /path/to/output --folder-name "Sales"
 ```
 
 **Show documents not in any folder:**
 
 ```bash
-python3 filter_by_folder.py /path/to/output --no-folder
+bun run src/filter-by-folder.ts /path/to/output --no-folder
 ```
 
 **View all documents grouped by folder:**
 
 ```bash
-python3 filter_by_folder.py /path/to/output
+bun run src/filter-by-folder.ts /path/to/output
 ```
 
 ---
