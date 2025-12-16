@@ -22,6 +22,13 @@ interface Workspace {
   name: string;
   created_at: string;
   owner_id?: string;
+  description?: string;
+  members_count?: number;
+}
+
+interface DocumentReference {
+  id?: string;
+  document_id?: string;
 }
 
 interface DocumentList {
@@ -31,8 +38,8 @@ interface DocumentList {
   created_at: string;
   workspace_id?: string;
   owner_id?: string;
-  documents?: any[];
-  document_ids?: string[];
+  documents?: DocumentReference[];
+  document_ids?: (string | DocumentReference)[];
   description?: string;
   is_favourite?: boolean;
 }

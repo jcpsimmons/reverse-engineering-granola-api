@@ -120,8 +120,9 @@ async function main() {
       const docIds: string[] = [];
       for (let j = 0; j < Math.min(5, documentsInList.length); j++) {
         const doc = documentsInList[j];
-        if (typeof doc === 'object') {
-          docIds.push((doc as any).id || (doc as any).document_id || 'unknown');
+        if (typeof doc === 'object' && doc !== null) {
+          const docRef = doc as { id?: string; document_id?: string };
+          docIds.push(docRef.id || docRef.document_id || 'unknown');
         } else {
           docIds.push(String(doc));
         }

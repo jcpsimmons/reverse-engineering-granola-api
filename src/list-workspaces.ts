@@ -94,14 +94,14 @@ async function main() {
     console.log(`   ID: ${workspaceId}`);
     console.log(`   Created: ${createdAt}`);
     
-    if ((workspace as any).description) {
-      console.log(`   Description: ${(workspace as any).description}`);
+    if (workspace.description) {
+      console.log(`   Description: ${workspace.description}`);
     }
     if (workspace.owner_id) {
       console.log(`   Owner ID: ${workspace.owner_id}`);
     }
-    if ((workspace as any).members_count) {
-      console.log(`   Members: ${(workspace as any).members_count}`);
+    if (workspace.members_count) {
+      console.log(`   Members: ${workspace.members_count}`);
     }
   }
   

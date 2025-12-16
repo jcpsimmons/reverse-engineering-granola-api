@@ -94,8 +94,13 @@ function extractClientIdFromJWT(accessToken: string): string | null {
       return null;
     }
     
-    // Decode the payload (middle part)
-    const payload = Buffer.from(parts[1], 'base64').toString('utf-8');
+    // Validate and decode the payload (middle part)
+    const payloadBase64 = parts[1];
+    if (!payloadBase64 || !/^[A-Za-z0-9_-]+$/.test(payloadBase64)) {
+      return null;
+    }
+    
+    const payload = Buffer.from(payloadBase64, 'base64').toString('utf-8');
     const decoded = JSON.parse(payload);
     
     // Extract client_id from the 'iss' field
@@ -105,7 +110,7 @@ function extractClientIdFromJWT(accessToken: string): string | null {
       return null;
     }
     
-    const CLIENT_ID_PATTERN = /client_[^/]+/;
+    const CLIENT_ID_PATTERN = /client_[a-zA-Z0-9_-]+$/;
     const match = iss.match(CLIENT_ID_PATTERN);
     return match ? match[0] : null;
   } catch (error) {

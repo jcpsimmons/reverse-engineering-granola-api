@@ -96,6 +96,7 @@ export function convertTranscriptToMarkdown(transcriptData: Utterance[] | null |
 
 /**
  * Sanitize a title to create a valid filename
+ * Note: Currently not used, but available for custom filename generation
  */
 export function sanitizeFilename(title: string): string {
   const invalidChars = /[<>:"\/\\|?*]/g;
