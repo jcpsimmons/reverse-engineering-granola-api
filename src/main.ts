@@ -129,12 +129,8 @@ async function main() {
     await Bun.write(workspacesPath, JSON.stringify(workspacesResponse, null, 2));
     console.log(`Workspaces data saved to ${workspacesPath}`);
     
-    // Build workspace map
-    const workspaces = Array.isArray(workspacesResponse) 
-      ? workspacesResponse 
-      : (workspacesResponse as any).workspaces || [];
-    
-    for (const workspace of workspaces) {
+    // Build workspace map - workspacesResponse is already an array
+    for (const workspace of workspacesResponse) {
       if (workspace.id && workspace.name) {
         workspaceMap.set(workspace.id, workspace.name);
       }
@@ -158,12 +154,8 @@ async function main() {
     await Bun.write(documentListsPath, JSON.stringify(documentListsResponse, null, 2));
     console.log(`Document lists data saved to ${documentListsPath}`);
     
-    // Build document-to-lists mapping
-    const lists = Array.isArray(documentListsResponse)
-      ? documentListsResponse
-      : (documentListsResponse as any).lists || (documentListsResponse as any).document_lists || [];
-    
-    for (const docList of lists) {
+    // Build document-to-lists mapping - documentListsResponse is already an array
+    for (const docList of documentListsResponse) {
       const listId = docList.id;
       const listName = docList.name || docList.title;
       
@@ -189,7 +181,7 @@ async function main() {
       }
     }
     
-    console.log(`Found ${lists.length} document lists with ${documentToListsMap.size} documents organized`);
+    console.log(`Found ${documentListsResponse.length} document lists with ${documentToListsMap.size} documents organized`);
   } else {
     console.warn("Could not fetch document lists - folder information will not be included in metadata");
   }

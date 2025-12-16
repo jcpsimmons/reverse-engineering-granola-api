@@ -99,13 +99,14 @@ function extractClientIdFromJWT(accessToken: string): string | null {
     const decoded = JSON.parse(payload);
     
     // Extract client_id from the 'iss' field
-    // Format: https://auth.granola.ai/user_management/client_XXXXX
+    // Format: https://auth.granola.ai/user_management/client_{ID}
     const iss = decoded.iss;
     if (!iss) {
       return null;
     }
     
-    const match = iss.match(/client_[^/]+/);
+    const CLIENT_ID_PATTERN = /client_[^/]+/;
+    const match = iss.match(CLIENT_ID_PATTERN);
     return match ? match[0] : null;
   } catch (error) {
     console.error("Error extracting client ID from JWT:", error);

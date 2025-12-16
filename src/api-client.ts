@@ -45,6 +45,15 @@ interface Utterance {
   confidence?: number;
 }
 
+interface WorkspacesResponse {
+  workspaces?: Workspace[];
+}
+
+interface DocumentListsResponse {
+  lists?: DocumentList[];
+  document_lists?: DocumentList[];
+}
+
 /**
  * Create headers for API requests
  */
@@ -134,7 +143,16 @@ export async function fetchWorkspaces(token: string): Promise<Workspace[] | null
       throw new Error(`HTTP ${response.status}`);
     }
 
-    return await response.json();
+    const result: Workspace[] | WorkspacesResponse = await response.json();
+    
+    // Handle different response formats
+    if (Array.isArray(result)) {
+      return result;
+    } else if (result.workspaces) {
+      return result.workspaces;
+    }
+    
+    return [result as Workspace];
   } catch (error) {
     console.error("Error fetching workspaces:", error);
     return null;
@@ -171,7 +189,18 @@ export async function fetchDocumentLists(token: string): Promise<DocumentList[] 
       }
 
       console.log(`Successfully fetched document lists from ${url}`);
-      return await response.json();
+      const result: DocumentList[] | DocumentListsResponse = await response.json();
+      
+      // Handle different response formats
+      if (Array.isArray(result)) {
+        return result;
+      } else if (result.lists) {
+        return result.lists;
+      } else if (result.document_lists) {
+        return result.document_lists;
+      }
+      
+      return [result as DocumentList];
     } catch (error) {
       console.error(`Error fetching document lists from ${url}:`, error);
       continue;

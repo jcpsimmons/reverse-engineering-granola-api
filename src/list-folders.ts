@@ -78,25 +78,14 @@ async function main() {
   console.log("Document Lists (Folders) found:");
   console.log("-".repeat(80));
   
-  let lists: DocumentList[] = [];
-  if (Array.isArray(listsResponse)) {
-    lists = listsResponse;
-  } else if ((listsResponse as any).lists) {
-    lists = (listsResponse as any).lists;
-  } else if ((listsResponse as any).document_lists) {
-    lists = (listsResponse as any).document_lists;
-  } else {
-    lists = [listsResponse as DocumentList];
-  }
-  
-  if (lists.length === 0) {
-    console.log("No document lists found or unexpected response format.");
-    console.log(`Response structure: ${JSON.stringify(listsResponse, null, 2)}`);
+  // listsResponse is already an array of document lists
+  if (listsResponse.length === 0) {
+    console.log("No document lists found.");
     return;
   }
   
-  for (let i = 0; i < lists.length; i++) {
-    const docList = lists[i];
+  for (let i = 0; i < listsResponse.length; i++) {
+    const docList = listsResponse[i];
     const listId = docList.id || "N/A";
     const listName = docList.name || docList.title || "Unnamed List";
     const createdAt = docList.created_at || "N/A";
@@ -148,7 +137,7 @@ async function main() {
   
   console.log();
   console.log("=".repeat(80));
-  console.log(`Total document lists: ${lists.length}`);
+  console.log(`Total document lists: ${listsResponse.length}`);
   console.log(`Full data saved to: ${outputFile}`);
 }
 

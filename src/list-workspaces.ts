@@ -78,23 +78,14 @@ async function main() {
   console.log("Workspaces found:");
   console.log("-".repeat(80));
   
-  let workspaces: Workspace[] = [];
-  if (Array.isArray(workspacesResponse)) {
-    workspaces = workspacesResponse;
-  } else if ((workspacesResponse as any).workspaces) {
-    workspaces = (workspacesResponse as any).workspaces;
-  } else {
-    workspaces = [workspacesResponse as Workspace];
-  }
-  
-  if (workspaces.length === 0) {
-    console.log("No workspaces found or unexpected response format.");
-    console.log(`Response structure: ${JSON.stringify(workspacesResponse, null, 2)}`);
+  // workspacesResponse is already an array of workspaces
+  if (workspacesResponse.length === 0) {
+    console.log("No workspaces found.");
     return;
   }
   
-  for (let i = 0; i < workspaces.length; i++) {
-    const workspace = workspaces[i];
+  for (let i = 0; i < workspacesResponse.length; i++) {
+    const workspace = workspacesResponse[i];
     const workspaceId = workspace.id || "N/A";
     const workspaceName = workspace.name || "Unnamed Workspace";
     const createdAt = workspace.created_at || "N/A";
@@ -116,7 +107,7 @@ async function main() {
   
   console.log();
   console.log("=".repeat(80));
-  console.log(`Total workspaces: ${workspaces.length}`);
+  console.log(`Total workspaces: ${workspacesResponse.length}`);
   console.log(`Full data saved to: ${outputFile}`);
 }
 

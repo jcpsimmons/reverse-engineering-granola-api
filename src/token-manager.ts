@@ -77,7 +77,9 @@ export class TokenManager {
       if (this.refreshToken) config.refresh_token = this.refreshToken;
       if (this.clientId) config.client_id = this.clientId;
       if (this.accessToken) config.access_token = this.accessToken;
-      if (this.tokenExpiry) config.token_expiry = this.tokenExpiry.toISOString();
+      if (this.tokenExpiry) {
+        config.token_expiry = this.tokenExpiry.toISOString();
+      }
 
       await Bun.write(this.configFile, JSON.stringify(config, null, 2));
       console.log(`Configuration saved to ${this.configFile}`);
