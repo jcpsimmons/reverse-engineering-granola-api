@@ -25,12 +25,24 @@ bun.lockb
 
 # Configuration and secrets
 config.json
+*.env
+.env*
+*.pem
+*.key
+*.crt
+*_credentials.json
+secrets/
 
 # Logs
 *.log
 
-# Output
+# Output (contains personal meeting data)
 output/
+test-output/
 granola_api_response.json
 workspaces.json
 document_lists.json
+
+# MCP test/temp files
+*.test.ts
+test-*.ts
