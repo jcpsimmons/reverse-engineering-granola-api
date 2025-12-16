@@ -1,0 +1,20 @@
+{
+  "name": "reverse-engineering-granola-api",
+  "version": "1.0.0",
+  "description": "Reverse-engineered documentation of the Granola API",
+  "type": "module",
+  "scripts": {
+    "main": "bun run src/main.ts",
+    "list-workspaces": "bun run src/list-workspaces.ts",
+    "list-folders": "bun run src/list-folders.ts",
+    "filter-by-workspace": "bun run src/filter-by-workspace.ts",
+    "filter-by-folder": "bun run src/filter-by-folder.ts"
+  },
+  "keywords": [
+    "granola",
+    "api",
+    "reverse-engineering"
+  ],
+  "author": "",
+  "license": "MIT"
+}
