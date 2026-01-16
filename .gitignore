@@ -46,3 +46,4 @@ document_lists.json
 # MCP test/temp files
 *.test.ts
 test-*.ts
+.mcpregis*
