@@ -14,6 +14,10 @@ interface AuthResponse {
   token_type: string;
 }
 
+export type RefreshResult =
+  | { success: true }
+  | { success: false; reason: "invalid_grant" | "other" };
+
 export class TokenManager {
   private configFile: string;
   private refreshToken: string | null = null;
@@ -105,17 +109,17 @@ export class TokenManager {
   /**
    * Refresh the access token using the refresh token
    */
-  async refreshAccessToken(): Promise<boolean> {
+  async refreshAccessToken(): Promise<RefreshResult> {
     console.log("Obtaining new access token from refresh token...");
 
     if (!this.refreshToken) {
       console.error("No refresh token available in config.json");
-      return false;
+      return { success: false, reason: "other" };
     }
 
     if (!this.clientId) {
       console.error("No client_id found in config.json");
-      return false;
+      return { success: false, reason: "other" };
     }
 
     const url = "https://api.workos.com/user_management/authenticate";
@@ -138,7 +142,12 @@ export class TokenManager {
         const errorText = await response.text();
         console.error(`Error obtaining access token: ${response.status}`);
         console.error(`Response body: ${errorText}`);
-        return false;
+
+        // Check if it's an invalid_grant error (expired/invalid refresh token)
+        if (errorText.includes("invalid_grant")) {
+          return { success: false, reason: "invalid_grant" };
+        }
+        return { success: false, reason: "other" };
       }
 
       const result: AuthResponse = await response.json();
@@ -158,25 +167,27 @@ export class TokenManager {
       await this.saveConfig();
 
       console.log(`Successfully obtained access token (expires in ${expiresIn} seconds)`);
-      return true;
+      return { success: true };
     } catch (error) {
       console.error("Error obtaining access token:", error);
-      return false;
+      return { success: false, reason: "other" };
     }
   }
 
   /**
    * Get a valid access token, refreshing if necessary
+   * Returns the token on success, or a RefreshResult with failure reason
    */
-  async getValidToken(): Promise<string | null> {
+  async getValidToken(): Promise<string | RefreshResult> {
     if (this.isTokenExpired()) {
-      if (!await this.refreshAccessToken()) {
+      const result = await this.refreshAccessToken();
+      if (!result.success) {
         console.error("Failed to obtain access token");
-        return null;
+        return result;
       }
     }
 
-    return this.accessToken;
+    return this.accessToken!;
   }
 
   /**

@@ -4,6 +4,9 @@
   "description": "Reverse-engineered documentation of the Granola API with MCP server for searching meeting notes",
   "type": "module",
   "mcpName": "granola-search",
+  "bin": {
+    "granola-sync": "src/main.ts"
+  },
   "scripts": {
     "main": "bun run src/main.ts",
     "list-workspaces": "bun run src/list-workspaces.ts",

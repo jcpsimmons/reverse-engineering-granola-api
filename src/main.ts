@@ -6,8 +6,9 @@
 
 import { mkdir } from "fs/promises";
 import { join } from "path";
-import { TokenManager } from "./token-manager";
+import { TokenManager, type RefreshResult } from "./token-manager";
 import { getTokensAutomatically } from "./granola-automation";
+import { parseDateRange, isDateInRange } from "./date-parser";
 import {
   fetchGranolaDocuments,
   fetchWorkspaces,
@@ -79,14 +80,47 @@ async function main() {
   
   // Parse command line arguments
   const args = process.argv.slice(2);
-  if (args.length === 0) {
-    console.error("Usage: bun run src/main.ts <output_directory>");
-    console.error("Example: bun run src/main.ts ./output");
+
+  // Parse flags
+  let outputDir: string | undefined;
+  let sinceArg: string | undefined;
+  let untilArg: string | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--since" && args[i + 1]) {
+      sinceArg = args[++i];
+    } else if (args[i] === "--until" && args[i + 1]) {
+      untilArg = args[++i];
+    } else if (!args[i].startsWith("--")) {
+      outputDir = args[i];
+    }
+  }
+
+  if (!outputDir) {
+    console.error("Usage: bun run src/main.ts <output_directory> [--since <date>] [--until <date>]");
+    console.error("");
+    console.error("Date formats:");
+    console.error("  ISO8601:   2025-01-15");
+    console.error("  Relative:  today, yesterday, last week, last month");
+    console.error("  Patterns:  last 7 days, last 2 weeks, last 3 months");
+    console.error("");
+    console.error("Examples:");
+    console.error("  bun run src/main.ts ./output --since 'last week'");
+    console.error("  bun run src/main.ts ./output --since 'last 2 weeks'");
+    console.error("  bun run src/main.ts ./output --since 2025-01-01 --until 2025-01-31");
     process.exit(1);
   }
-  
-  const outputDir = args[0];
+
   console.log(`Output directory set to: ${outputDir}`);
+
+  // Parse date range
+  const { start: sinceDate, end: untilDate } = parseDateRange(sinceArg, untilArg);
+  if (sinceDate) {
+    console.log(`Filtering documents updated since: ${sinceDate.toISOString()}`);
+  }
+  if (untilDate) {
+    console.log(`Filtering documents updated until: ${untilDate.toISOString()}`);
+  }
   
   // Check if output directory exists
   try {
@@ -110,11 +144,38 @@ async function main() {
   }
   
   console.log("Obtaining access token...");
-  const accessToken = await tokenManager.getValidToken();
-  if (!accessToken) {
+  let tokenResult = await tokenManager.getValidToken();
+
+  // If invalid_grant, the refresh token is expired - re-extract from Granola
+  if (typeof tokenResult === "object" && !tokenResult.success && tokenResult.reason === "invalid_grant") {
+    console.log("Refresh token expired. Re-extracting tokens from Granola...");
+    try {
+      const tokens = await getTokensAutomatically();
+
+      // Update config.json with fresh tokens
+      const config = {
+        refresh_token: tokens.refreshToken,
+        client_id: tokens.clientId
+      };
+      await Bun.write("config.json", JSON.stringify(config, null, 2));
+      console.log("Config file updated with fresh tokens");
+
+      // Reload config and try again
+      await tokenManager.loadConfig();
+      tokenResult = await tokenManager.getValidToken();
+    } catch (error) {
+      console.error("Failed to automatically re-extract tokens:", error);
+      process.exit(1);
+    }
+  }
+
+  // Check if we have a valid token now
+  if (typeof tokenResult === "object" && !tokenResult.success) {
     console.error("Failed to obtain access token. Exiting.");
     process.exit(1);
   }
+
+  const accessToken = tokenResult as string;
   
   // Fetch workspaces
   console.log("Fetching workspaces from Granola API...");
@@ -188,19 +249,33 @@ async function main() {
   
   // Fetch documents
   console.log("Fetching documents from Granola API...");
-  const documents = await fetchGranolaDocuments(accessToken);
-  
+  let documents = await fetchGranolaDocuments(accessToken);
+
   // Save API response
   const apiResponsePath = join(outputDir, "granola_api_response.json");
   await Bun.write(apiResponsePath, JSON.stringify({ docs: documents }, null, 2));
   console.log(`API response saved to ${apiResponsePath}`);
-  
+
   if (!documents || documents.length === 0) {
     console.warn("No documents found in the API response");
     return;
   }
-  
+
   console.log(`Successfully fetched ${documents.length} documents from Granola`);
+
+  // Filter by date range if specified
+  if (sinceDate || untilDate) {
+    const beforeCount = documents.length;
+    documents = documents.filter(doc =>
+      isDateInRange(doc.updated_at, sinceDate, untilDate)
+    );
+    console.log(`Filtered to ${documents.length} documents (excluded ${beforeCount - documents.length} outside date range)`);
+
+    if (documents.length === 0) {
+      console.warn("No documents match the specified date range");
+      return;
+    }
+  }
   
   let syncedCount = 0;
   for (const doc of documents) {
